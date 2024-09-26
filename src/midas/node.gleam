@@ -67,7 +67,7 @@ pub fn run(task, root) {
       let assert Ok(bytes) = fs.read(path)
       run(resume(Ok(bytes)), root)
     }
-    t.Write(file, bytes, resume) -> {
+    t.Write(_file, _bytes, _resume) -> {
       panic as "write"
     }
     t.Zip(files, resume) -> {
@@ -129,6 +129,6 @@ fn receive_redirect() {
       use Nil <- promise.await(glen_node.close(server))
       promise.resolve(Ok(url))
     }
-    Error(reason) -> todo
+    Error(reason) -> promise.resolve(Error(reason))
   }
 }

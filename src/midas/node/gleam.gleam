@@ -3,6 +3,7 @@ import gleam/package_interface
 import gleam/string
 import shellout
 import simplifile
+import snag
 
 pub fn build_js(root) {
   let result =
@@ -17,7 +18,7 @@ pub fn build_js(root) {
       let dir = string.append(root, "/build/dev/javascript")
       Ok(dir)
     }
-    Error(_) -> todo as "bad build js"
+    Error(_reason) -> snag.error("failed to bundle javascript")
   }
 }
 
