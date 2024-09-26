@@ -18,7 +18,7 @@ simplifile = ">= 1.7.0 and < 2.0.0"
 snag = ">= 0.3.0 and < 1.0.0"
 glen_node = {path= "../glen_node"}
 plinth = ">= 0.4.14 and < 1.0.0"
-midas = ">= 0.4.7 and < 1.0.0"
+midas = ">= 0.4.7 and < 2.0.0"
 filepath = ">= 1.0.0 and < 2.0.0"
 gleam_http = ">= 3.7.0 and < 4.0.0"
 glen = ">= 2.2.0 and < 3.0.0"
