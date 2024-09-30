@@ -15,7 +15,6 @@ import midas/node/file_system as fs
 import midas/node/gleam
 import midas/node/rollup
 import midas/node/zip
-import midas/promisex
 import midas/task as t
 import snag
 
@@ -122,7 +121,7 @@ fn handle_redirect(request: glen.Request, resolve) {
 }
 
 fn receive_redirect() {
-  let #(promise, resolve) = promisex.start()
+  let #(promise, resolve) = promise.start()
   case glen_node.serve(8080, handle_redirect(_, resolve)) {
     Ok(server) -> {
       use url <- promise.await(promise)
