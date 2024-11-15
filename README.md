@@ -1,5 +1,7 @@
 # midas_node
 
+Run [midas](https://github.com/midas-framework/midas) tasks on nodejs.
+
 [![Package Version](https://img.shields.io/hexpm/v/midas_node)](https://hex.pm/packages/midas_node)
 [![Hex Docs](https://img.shields.io/badge/hex-docs-ffaff3)](https://hexdocs.pm/midas_node/)
 

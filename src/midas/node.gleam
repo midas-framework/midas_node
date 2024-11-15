@@ -24,9 +24,7 @@ pub fn run(task, root) {
     t.Abort(reason) -> promise.resolve(Error(reason))
     t.Bundle(module, function, resume) -> {
       use project <- r.try(fs.current_directory())
-      io.debug(project)
       use js_dir <- r.try(gleam.build_js(project))
-      io.debug(js_dir)
       // let assert Ok(#(package, _)) = string.split_once(module, "/")
       // Assumes that the package and module share name at top level
       let package = "eyg"
@@ -62,12 +60,13 @@ pub fn run(task, root) {
     }
     t.Read(file, resume) -> {
       let path = filepath.join(root, file)
-      io.debug(path)
-      let assert Ok(bytes) = fs.read(path)
-      run(resume(Ok(bytes)), root)
+      let result = fs.read(path) |> result.map_error(snag.line_print)
+      run(resume(result), root)
     }
-    t.Write(_file, _bytes, _resume) -> {
-      panic as "write"
+    t.Write(file, bytes, resume) -> {
+      let path = filepath.join(root, file)
+      let result = fs.write(path, bytes) |> result.map_error(snag.line_print)
+      run(resume(result), root)
     }
     t.Zip(files, resume) -> {
       use return <- promise.await(zip.zip(files))
