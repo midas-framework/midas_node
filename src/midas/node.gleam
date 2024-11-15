@@ -1,8 +1,11 @@
 import filepath
 import gleam/fetch
 import gleam/http
+import gleam/http/request
+import gleam/http/response
 import gleam/io
 import gleam/javascript/promise
+import gleam/option
 import gleam/result
 import gleam/string
 import gleam/uri
@@ -16,6 +19,7 @@ import midas/node/gleam
 import midas/node/rollup
 import midas/node/zip
 import midas/task as t
+import plinth/browser/crypto/subtle
 import snag
 
 pub fn run(task, root) {
@@ -25,9 +29,9 @@ pub fn run(task, root) {
     t.Bundle(module, function, resume) -> {
       use project <- r.try(fs.current_directory())
       use js_dir <- r.try(gleam.build_js(project))
-      // let assert Ok(#(package, _)) = string.split_once(module, "/")
+      let assert Ok(#(package, _)) = string.split_once(module, "/")
       // Assumes that the package and module share name at top level
-      let package = "eyg"
+      // let package = "eyg"
       let module_path = string.concat([package, "/", module])
 
       use bundle <- promise.await(rollup.bundle_fn(
@@ -47,6 +51,16 @@ pub fn run(task, root) {
       let assert Ok(raw) = return
       run(resume(uri.parse(raw)), root)
     }
+    t.Hash(algorithm, bytes, resume) -> {
+      let algorithm = case algorithm {
+        t.SHA1 -> subtle.SHA1
+        t.SHA256 -> subtle.SHA256
+        t.SHA384 -> subtle.SHA384
+        t.SHA512 -> subtle.SHA512
+      }
+      use result <- promise.await(subtle.digest(algorithm, bytes))
+      run(resume(result), root)
+    }
     t.List(directory, resume) -> {
       let path = filepath.join(root, directory)
       run(
@@ -61,6 +75,26 @@ pub fn run(task, root) {
     t.Read(file, resume) -> {
       let path = filepath.join(root, file)
       let result = fs.read(path) |> result.map_error(snag.line_print)
+      run(resume(result), root)
+    }
+    t.Serve(port, handle, resume) -> {
+      let port = option.unwrap(port, 8080)
+      let result =
+        glen_node.serve(port, fn(request) {
+          use body <- promise.map(glen.read_body_bits(request))
+          case body {
+            Ok(body) -> {
+              let request = request.set_body(request, body)
+              let response = handle(request)
+              response
+              |> response.set_body(glen.Bits(response.body))
+            }
+            Error(_reason) ->
+              response.new(500)
+              |> response.set_body(glen.Bits(<<"failed to read request body">>))
+          }
+        })
+        |> result.replace(Nil)
       run(resume(result), root)
     }
     t.Write(file, bytes, resume) -> {
