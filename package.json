@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "chokidar": "^4.0.1",
     "rollup": "^4.17.2"
   },
   "devDependencies": {

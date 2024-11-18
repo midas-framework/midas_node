@@ -1,5 +1,5 @@
 name = "midas_node"
-version = "1.1.0"
+version = "1.2.0"
 target = "javascript"
 
 description = "Run midas tasks in a nodejs environment. "
@@ -22,6 +22,7 @@ glen = ">= 2.2.0 and < 3.0.0"
 glen_node = ">= 0.0.2 and < 1.0.0"
 midas = ">= 1.2.0 and < 2.0.0"
 plinth = ">= 0.5.1 and < 1.0.0"
+javascript_mutable_reference = ">= 1.0.0 and < 2.0.0"
 
 
 [dev-dependencies]
