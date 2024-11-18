@@ -55,6 +55,8 @@ pub fn main() {
 }
 ```
 
+[Watch me talk through this example](https://vimeo.com/1030747035)
+
 **Note: watch is lazy**, and will only rerun the task from the point where a file has changed.
 In the previous example if `index.html` is changed then the project will not be rebundled.
 This makes watch more responsive. To get the most out response watch pipeline put slow tasks earlier in the task.

@@ -4,10 +4,6 @@ import midas/node
 import midas/task as t
 import snag
 
-pub fn example() {
-  todo
-}
-
 fn build() {
   use src <- t.do(t.bundle("example/client", "run"))
   use page <- t.do(t.read("src/index.html"))
