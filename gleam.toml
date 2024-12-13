@@ -1,5 +1,5 @@
 name = "midas_node"
-version = "1.2.0"
+version = "1.2.1"
 target = "javascript"
 
 description = "Run midas tasks in a nodejs environment. "

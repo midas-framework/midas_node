@@ -262,6 +262,10 @@ fn handle_redirect(request: glen.Request, resolve) {
       "<html><body><h1>finalising authorization</h1><script>fetch(\"/\", {method:\"POST\",body:location})</script></body></html>"
       |> glen.html(status.ok)
       |> promise.resolve
+    http.Options ->
+      ""
+      |> glen.html(status.ok)
+      |> promise.resolve
     http.Post -> {
       use body <- promise.await(glen.read_text_body(request))
       case body {
@@ -278,7 +282,10 @@ fn handle_redirect(request: glen.Request, resolve) {
           |> promise.resolve
       }
     }
-    _ -> panic as "unexpected method"
+    _ -> {
+      io.debug(request)
+      panic as "unexpected method"
+    }
   }
 }
 
