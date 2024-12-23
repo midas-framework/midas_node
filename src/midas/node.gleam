@@ -224,7 +224,7 @@ fn do_run(task, root, cache, servers) {
   }
 }
 
-fn do_bundle(module, function) {
+pub fn do_bundle(module, function) {
   use project <- r.try(fs.current_directory())
   use js_dir <- r.try(gleam.build_js(project))
   let package = case string.split_once(module, "/") {
