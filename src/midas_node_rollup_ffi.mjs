@@ -5,7 +5,7 @@ import resolve
 
 export async function iife(input) {
     try {
-        const bundle = await rollup({ input, plugins: [resolve()] })
+        const bundle = await rollup({ input, plugins: [resolve({ browser: true })] })
         const output = await bundle.generate({format: "iife"})
         return new Ok(output.output[0].code)
     } catch (error) {
