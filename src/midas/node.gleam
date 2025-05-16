@@ -240,15 +240,25 @@ pub fn do_bundle(module, function) {
 
 pub fn do_fetch(request) {
   use response <- promise.await(fetch.send_bits(request))
-  let assert Ok(response) = response
-  use response <- promise.await(fetch.read_bytes_body(response))
-  let response = case response {
-    Ok(response) -> Ok(response)
-    Error(fetch.NetworkError(s)) -> Error(t.NetworkError(s))
-    Error(fetch.UnableToReadBody) -> Error(t.UnableToReadBody)
-    Error(fetch.InvalidJsonBody) -> panic
+  case response {
+    Error(reason) -> promise.resolve(Error(cast_fetch_error(reason)))
+    Ok(response) -> {
+      use response <- promise.await(fetch.read_bytes_body(response))
+      let response = case response {
+        Ok(response) -> Ok(response)
+        Error(reason) -> Error(cast_fetch_error(reason))
+      }
+      promise.resolve(response)
+    }
   }
-  promise.resolve(response)
+}
+
+fn cast_fetch_error(reason) {
+  case reason {
+    fetch.NetworkError(s) -> t.NetworkError(s)
+    fetch.UnableToReadBody -> t.UnableToReadBody
+    fetch.InvalidJsonBody -> t.UnableToReadBody
+  }
 }
 
 fn do_follow(url) {
@@ -282,10 +292,7 @@ fn handle_redirect(request: glen.Request, resolve) {
           |> promise.resolve
       }
     }
-    _ -> {
-      io.debug(request)
-      panic as "unexpected method"
-    }
+    m -> panic as { "unexpected method" <> http.method_to_string(m) }
   }
 }
 
