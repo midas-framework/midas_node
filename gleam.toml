@@ -10,20 +10,19 @@ links = [{ title = "midas", href = "https://github.com/midas-framework/midas" }]
 [dependencies]
 gleam_fetch = ">= 1.0.0 and < 2.0.0"
 gleam_javascript = ">= 1.0.0 and < 2.0.0"
-gleam_json = ">= 1.0.0 and < 3.0.0"
-gleam_package_interface = ">= 1.0.0 and < 2.0.0"
-gleam_stdlib = ">= 0.34.0 and < 2.0.0"
+gleam_stdlib = ">= 0.60.0 and < 2.0.0"
 shellout = ">= 1.6.0 and < 2.0.0"
 simplifile = ">= 1.7.0 and < 3.0.0"
 snag = ">= 1.1.0 and < 2.0.0"
 filepath = ">= 1.0.0 and < 2.0.0"
-gleam_http = ">= 3.7.0 and < 5.0.0"
-glen = ">= 2.2.0 and < 3.0.0"
+gleam_http = ">= 4.0.0 and < 5.0.0"
+# glen = ">= 2.2.0 and < 3.0.0"
+glen = { git = "git@github.com:crowdhailer/glen", ref = "8a500bc59e99f4a807700c6608bb3f9b44ae8784" }
 glen_node = ">= 0.0.3 and < 1.0.0"
 midas = ">= 1.2.0 and < 2.0.0"
-plinth = ">= 0.5.1 and < 1.0.0"
+plinth = ">= 0.6.0 and < 1.0.0"
 javascript_mutable_reference = ">= 1.0.0 and < 2.0.0"
-
+conversation = {git = "git@github.com:moedevelops/conversation", ref = "d568ecc827c3398d400730babb8178ee8b92f0a9"}
 
 [dev-dependencies]
 gleeunit = ">= 1.0.0 and < 2.0.0"

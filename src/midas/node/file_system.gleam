@@ -1,5 +1,4 @@
 import filepath
-import gleam/json
 import gleam/list
 import gleam/result
 import gleam/string
@@ -58,19 +57,6 @@ pub fn read(filename) {
   simplifile.read_bits(filename)
   |> result.map_error(fn(reason) { snag.new(simplifile.describe_error(reason)) })
   |> snag.context(string.concat(["Could not read file '", filename, "'"]))
-}
-
-pub fn read_json(filename, decoder) {
-  use raw <- result.try(
-    simplifile.read(filename)
-    |> result.map_error(fn(reason) {
-      snag.new(simplifile.describe_error(reason))
-    })
-    |> snag.context(string.concat(["Could not read file '", filename, "'"])),
-  )
-  json.decode(raw, decoder)
-  |> result.map_error(fn(reason) { snag.new(string.inspect(reason)) })
-  |> snag.context(string.concat(["Could not decode file '", filename, "'"]))
 }
 
 pub fn write(filename, bytes) {
