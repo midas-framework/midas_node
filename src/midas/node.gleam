@@ -1,4 +1,5 @@
 import filepath
+import gleam/crypto
 import gleam/fetch
 import gleam/http
 import gleam/http/request
@@ -23,6 +24,7 @@ import midas/node/rollup
 import midas/node/zip
 import midas/task as t
 import plinth/browser/crypto/subtle
+import plinth/javascript/date
 import snag.{type Snag}
 
 // currently this is not smart as all projects are small enough to rely on chokidar to effeciently watch files.
@@ -41,13 +43,13 @@ fn stop_servers(servers) {
   }
 }
 
-type Coordinator(a) {
+type Coordinator(a, c) {
   Working(changed: List(String))
   Ready(
     root: String,
     callback: fn(Result(a, Snag)) -> Nil,
     final: Result(a, Snag),
-    previous: List(t.Effect(a)),
+    previous: List(t.Effect(a, c)),
     servers: List(#(Int, glen_node.Server)),
   )
 }
@@ -89,13 +91,13 @@ fn redo(final, previous, servers, root, invalidated, unchanged) {
   }
 }
 
-type Message(a) {
+type Message(a, c) {
   WatchMessage(chokidar.AllEvent, String)
   Done(
     root: String,
     callback: fn(Result(a, Snag)) -> Nil,
     final: Result(a, Snag),
-    previous: List(t.Effect(a)),
+    previous: List(t.Effect(a, c)),
     servers: List(#(Int, glen_node.Server)),
   )
 }
@@ -169,6 +171,11 @@ fn do_run(task, root, cache, servers) {
       let cache = [task, ..cache]
       do_run(resume(output), root, cache, servers)
     }
+    t.ExportJsonWebKey(key, resume) -> {
+      use output <- promise.await(subtle.export_jwk(key))
+      let cache = [task, ..cache]
+      do_run(resume(output), root, cache, servers)
+    }
     t.Fetch(request, resume) -> {
       use return <- promise.await(do_fetch(request))
       let cache = [task, ..cache]
@@ -179,6 +186,19 @@ fn do_run(task, root, cache, servers) {
       let assert Ok(raw) = return
       let cache = [task, ..cache]
       do_run(resume(uri.parse(raw)), root, cache, servers)
+    }
+    t.GenerateKeyPair(algorithm, exportable, usages, resume) -> {
+      let alg = case algorithm {
+        t.EcKeyGenParams(name, curve) -> subtle.EcKeyGenParams(name, curve)
+      }
+      let usages = list.map(usages, usage_to_subtle)
+      use result <- promise.await(subtle.generate_key(alg, exportable, usages))
+      let result = case result {
+        Ok(#(public, private)) -> Ok(t.KeyPair(public:, private:))
+        Error(reason) -> Error(reason)
+      }
+      let cache = [task, ..cache]
+      do_run(resume(result), root, cache, servers)
     }
     t.Hash(algorithm, bytes, resume) -> {
       use result <- promise.await(do_hash(algorithm, bytes))
@@ -209,6 +229,29 @@ fn do_run(task, root, cache, servers) {
       }
       let cache = [task, ..cache]
       do_run(resume(result), root, cache, servers)
+    }
+    t.Sign(algorithm, key, data, resume) -> {
+      let algorithm = case algorithm {
+        t.EcdsaParams(x) -> subtle.EcdsaParams(hash_algorithm_to_subtle(x))
+      }
+      use result <- promise.await(subtle.sign(algorithm, key, data))
+      let cache = [task, ..cache]
+      do_run(resume(result), root, cache, servers)
+    }
+    t.StrongRandom(length, resume) -> {
+      let bytes = crypto.strong_random_bytes(length)
+      let cache = [task, ..cache]
+      do_run(resume(Ok(bytes)), root, cache, servers)
+    }
+    t.UnixNow(resume) -> {
+      let now = date.get_time(date.now()) / 1000
+      let cache = [task, ..cache]
+      do_run(resume(now), root, cache, servers)
+    }
+    t.Visit(uri, resume) -> {
+      browser.open(uri.to_string(uri))
+      let cache = [task, ..cache]
+      do_run(resume(Ok(Nil)), root, cache, servers)
     }
     t.Write(file, bytes, resume) -> {
       let path = filepath.join(root, file)
@@ -309,13 +352,30 @@ fn receive_redirect() {
 }
 
 fn do_hash(algorithm, bytes) {
-  let algorithm = case algorithm {
+  let algorithm = hash_algorithm_to_subtle(algorithm)
+  subtle.digest(algorithm, bytes)
+}
+
+fn hash_algorithm_to_subtle(algorithm) {
+  case algorithm {
     t.SHA1 -> subtle.SHA1
     t.SHA256 -> subtle.SHA256
     t.SHA384 -> subtle.SHA384
     t.SHA512 -> subtle.SHA512
   }
-  subtle.digest(algorithm, bytes)
+}
+
+fn usage_to_subtle(usage) {
+  case usage {
+    t.CanEncrypt -> subtle.Encrypt
+    t.CanDecrypt -> subtle.Decrypt
+    t.CanSign -> subtle.Sign
+    t.CanVerify -> subtle.Verify
+    t.CanDeriveKey -> subtle.DeriveKey
+    t.CanDeriveBits -> subtle.DeriveBits
+    t.CanWrapKey -> subtle.WrapKey
+    t.CanUnwrapKey -> subtle.UnwrapKey
+  }
 }
 
 fn do_read(file, root) {

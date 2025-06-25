@@ -30,7 +30,7 @@ pub fn on_all(watcher, callback f) {
       "addDir" -> f(AddDir, path)
       "unlinkDir" -> f(UnlinkDir, path)
       _ -> {
-        io.debug("unknown event: " <> event)
+        io.println("unknown event: " <> event)
         Nil
       }
     }
