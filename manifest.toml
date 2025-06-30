@@ -2,7 +2,7 @@
 # You typically do not need to edit this file
 
 packages = [
-  { name = "conversation", version = "2.0.1", build_tools = ["gleam"], requirements = ["gleam_http", "gleam_javascript", "gleam_stdlib"], source = "git", repo = "git@github.com:moedevelops/conversation", commit = "d568ecc827c3398d400730babb8178ee8b92f0a9" },
+  { name = "conversation", version = "2.0.2", build_tools = ["gleam"], requirements = ["gleam_http", "gleam_javascript", "gleam_stdlib"], otp_app = "conversation", source = "hex", outer_checksum = "60AFB424A723D5B29925487BCA66FF09EB157FD3EF72AF072714FEC903701226" },
   { name = "filepath", version = "1.1.2", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "filepath", source = "hex", outer_checksum = "B06A9AF0BF10E51401D64B98E4B627F1D2E48C154967DA7AF4D0914780A6D40A" },
   { name = "gleam_community_ansi", version = "1.4.3", build_tools = ["gleam"], requirements = ["gleam_community_colour", "gleam_regexp", "gleam_stdlib"], otp_app = "gleam_community_ansi", source = "hex", outer_checksum = "8A62AE9CC6EA65BEA630D95016D6C07E4F9973565FA3D0DE68DC4200D8E0DD27" },
   { name = "gleam_community_colour", version = "2.0.1", build_tools = ["gleam"], requirements = ["gleam_json", "gleam_stdlib"], otp_app = "gleam_community_colour", source = "hex", outer_checksum = "F0ACE69E3A47E913B03D3D0BB23A5563A91A4A7D20956916286068F4A9F817FE" },
@@ -12,21 +12,21 @@ packages = [
   { name = "gleam_javascript", version = "1.0.0", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "gleam_javascript", source = "hex", outer_checksum = "EF6C77A506F026C6FB37941889477CD5E4234FCD4337FF0E9384E297CB8F97EB" },
   { name = "gleam_json", version = "3.0.1", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "gleam_json", source = "hex", outer_checksum = "5BA154440B22D9800955B1AB854282FA37B97F30F409D76B0824D0A60C934188" },
   { name = "gleam_regexp", version = "1.1.1", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "gleam_regexp", source = "hex", outer_checksum = "9C215C6CA84A5B35BB934A9B61A9A306EC743153BE2B0425A0D032E477B062A9" },
-  { name = "gleam_stdlib", version = "0.60.0", build_tools = ["gleam"], requirements = [], otp_app = "gleam_stdlib", source = "hex", outer_checksum = "621D600BB134BC239CB2537630899817B1A42E60A1D46C5E9F3FAE39F88C800B" },
-  { name = "gleeunit", version = "1.3.1", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "gleeunit", source = "hex", outer_checksum = "A7DD6C07B7DA49A6E28796058AA89E651D233B357D5607006D70619CD89DAAAB" },
-  { name = "glen", version = "2.2.2", build_tools = ["gleam"], requirements = ["conversation", "filepath", "gleam_community_ansi", "gleam_http", "gleam_javascript", "gleam_stdlib", "marceau"], source = "git", repo = "git@github.com:crowdhailer/glen", commit = "8a500bc59e99f4a807700c6608bb3f9b44ae8784" },
+  { name = "gleam_stdlib", version = "0.61.0", build_tools = ["gleam"], requirements = [], otp_app = "gleam_stdlib", source = "hex", outer_checksum = "3DC407D6EDA98FCE089150C11F3AD892B6F4C3CA77C87A97BAE8D5AB5E41F331" },
+  { name = "gleeunit", version = "1.6.0", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "gleeunit", source = "hex", outer_checksum = "63022D81C12C17B7F1A60E029964E830A4CBD846BBC6740004FC1F1031AE0326" },
+  { name = "glen", version = "2.2.3", build_tools = ["gleam"], requirements = ["conversation", "filepath", "gleam_community_ansi", "gleam_http", "gleam_javascript", "gleam_stdlib", "marceau"], otp_app = "glen", source = "hex", outer_checksum = "A3A3A8CF2614344C660E1F0F984374CBCF2FE97E32CDD03935FCE8B39190A1B0" },
   { name = "glen_node", version = "0.0.3", build_tools = ["gleam"], requirements = ["gleam_javascript", "glen"], otp_app = "glen_node", source = "hex", outer_checksum = "0A81302C16B9719FC47FB022A127A51EA668D4F78CE6DCCCF430A3C098395511" },
   { name = "javascript_mutable_reference", version = "1.0.0", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "javascript_mutable_reference", source = "hex", outer_checksum = "3EE953EE7FE4FAFD17C16F24184F4C832FE260D761753F28F20D4AC1DA080F03" },
   { name = "marceau", version = "1.3.0", build_tools = ["gleam"], requirements = [], otp_app = "marceau", source = "hex", outer_checksum = "2D1C27504BEF45005F5DFB18591F8610FB4BFA91744878210BDC464412EC44E9" },
   { name = "midas", version = "1.6.0", build_tools = ["gleam"], requirements = ["filepath", "gleam_http", "gleam_json", "gleam_stdlib", "snag"], otp_app = "midas", source = "hex", outer_checksum = "3AE76A773CE6BCD8D518CBDEB011FF2309D222E65451170E4AE6ADD3D35BD74F" },
-  { name = "plinth", version = "0.6.1", build_tools = ["gleam"], requirements = ["gleam_javascript", "gleam_json", "gleam_stdlib"], otp_app = "plinth", source = "hex", outer_checksum = "02D6421A27795CDC5C3A452240E21D5D3CB8217219020BB247917132E36CC8F1" },
+  { name = "plinth", version = "0.7.0", build_tools = ["gleam"], requirements = ["gleam_javascript", "gleam_json", "gleam_stdlib"], otp_app = "plinth", source = "hex", outer_checksum = "8C37ACFD941623AEC78268ABB3B6220E3F3533A8316943E14600CD8342D5EF25" },
   { name = "shellout", version = "1.7.0", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "shellout", source = "hex", outer_checksum = "1BDC03438FEB97A6AF3E396F4ABEB32BECF20DF2452EC9A8C0ACEB7BDDF70B14" },
-  { name = "simplifile", version = "2.2.1", build_tools = ["gleam"], requirements = ["filepath", "gleam_stdlib"], otp_app = "simplifile", source = "hex", outer_checksum = "C88E0EE2D509F6D86EB55161D631657675AA7684DAB83822F7E59EB93D9A60E3" },
+  { name = "simplifile", version = "2.3.0", build_tools = ["gleam"], requirements = ["filepath", "gleam_stdlib"], otp_app = "simplifile", source = "hex", outer_checksum = "0A868DAC6063D9E983477981839810DC2E553285AB4588B87E3E9C96A7FB4CB4" },
   { name = "snag", version = "1.1.0", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "snag", source = "hex", outer_checksum = "7E9F06390040EB5FAB392CE642771484136F2EC103A92AE11BA898C8167E6E17" },
 ]
 
 [requirements]
-conversation = { git = "git@github.com:moedevelops/conversation", ref = "d568ecc827c3398d400730babb8178ee8b92f0a9" }
+conversation = { version = ">= 2.0.2 and < 3.0.0" }
 filepath = { version = ">= 1.0.0 and < 2.0.0" }
 gleam_crypto = { version = ">= 1.5.0 and < 2.0.0" }
 gleam_fetch = { version = ">= 1.0.0 and < 2.0.0" }
@@ -34,7 +34,7 @@ gleam_http = { version = ">= 4.0.0 and < 5.0.0" }
 gleam_javascript = { version = ">= 1.0.0 and < 2.0.0" }
 gleam_stdlib = { version = ">= 0.60.0 and < 2.0.0" }
 gleeunit = { version = ">= 1.0.0 and < 2.0.0" }
-glen = { git = "git@github.com:crowdhailer/glen", ref = "8a500bc59e99f4a807700c6608bb3f9b44ae8784" }
+glen = { version = ">= 2.2.3 and < 3.0.0" }
 glen_node = { version = ">= 0.0.3 and < 1.0.0" }
 javascript_mutable_reference = { version = ">= 1.0.0 and < 2.0.0" }
 midas = { version = ">= 1.6.0 and < 2.0.0" }
