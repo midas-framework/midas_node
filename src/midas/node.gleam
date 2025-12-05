@@ -15,6 +15,7 @@ import glen
 import glen/status
 import glen_node
 import javascript/mutable_reference
+import midas/effect as e
 import midas/js/run as r
 import midas/node/browser
 import midas/node/chokidar
@@ -22,10 +23,9 @@ import midas/node/file_system as fs
 import midas/node/gleam
 import midas/node/rollup
 import midas/node/zip
-import midas/task as t
 import plinth/browser/crypto/subtle
 import plinth/javascript/date
-import snag.{type Snag}
+import snag
 
 // currently this is not smart as all projects are small enough to rely on chokidar to effeciently watch files.
 fn sources(_previous) {
@@ -47,9 +47,9 @@ type Coordinator(a, c) {
   Working(changed: List(String))
   Ready(
     root: String,
-    callback: fn(Result(a, Snag)) -> Nil,
-    final: Result(a, Snag),
-    previous: List(t.Effect(a, c)),
+    callback: fn(a) -> Nil,
+    final: a,
+    previous: List(e.Effect(a, c)),
     servers: List(#(Int, glen_node.Server)),
   )
 }
@@ -62,13 +62,13 @@ fn redo(final, previous, servers, root, invalidated, unchanged) {
     [cached, ..previous] -> {
       let unchanged = [cached, ..unchanged]
       case cached {
-        t.Bundle(mod, func, resume) if src_affected -> {
+        e.Bundle(mod, func, resume) if src_affected -> {
           use Nil <- promise.await(stop_servers(servers))
           use output <- promise.await(do_bundle(mod, func))
           let output = result.map_error(output, snag.pretty_print)
           do_run(resume(output), root, unchanged, servers)
         }
-        t.Read(file, resume) -> {
+        e.Read(file, resume) -> {
           case list.contains(invalidated, file) {
             True -> {
               use Nil <- promise.await(stop_servers(servers))
@@ -78,7 +78,7 @@ fn redo(final, previous, servers, root, invalidated, unchanged) {
               redo(final, previous, servers, root, invalidated, unchanged)
           }
         }
-        t.Serve(port, _handle, _resume) -> {
+        e.Serve(port, _handle, _resume) -> {
           let servers = case list.key_pop(servers, option.unwrap(port, 8080)) {
             Ok(#(_, servers)) -> servers
             Error(Nil) -> servers
@@ -95,9 +95,9 @@ type Message(a, c) {
   WatchMessage(chokidar.AllEvent, String)
   Done(
     root: String,
-    callback: fn(Result(a, Snag)) -> Nil,
-    final: Result(a, Snag),
-    previous: List(t.Effect(a, c)),
+    callback: fn(a) -> Nil,
+    final: a,
+    previous: List(e.Effect(a, c)),
     servers: List(#(Int, glen_node.Server)),
   )
 }
@@ -155,73 +155,74 @@ pub fn watch(task, root, callback) {
   promise.resolve(Nil)
 }
 
-pub fn run(task, root) {
+pub fn run(
+  task: e.Effect(t, subtle.CryptoKey),
+  root: String,
+) -> promise.Promise(t) {
   use #(result, _cache, _servers) <- promise.map(do_run(task, root, [], []))
   result
 }
 
 fn do_run(task, root, cache, servers) {
   case task {
-    t.Done(value) -> promise.resolve(#(Ok(value), list.reverse(cache), servers))
-    t.Abort(reason) ->
-      promise.resolve(#(Error(reason), list.reverse(cache), servers))
-    t.Bundle(module, function, resume) -> {
+    e.Done(value) -> promise.resolve(#(value, list.reverse(cache), servers))
+    e.Bundle(module, function, resume) -> {
       use output <- promise.await(do_bundle(module, function))
       let output = result.map_error(output, snag.pretty_print)
       let cache = [task, ..cache]
       do_run(resume(output), root, cache, servers)
     }
-    t.ExportJsonWebKey(key, resume) -> {
+    e.ExportJsonWebKey(key, resume) -> {
       use output <- promise.await(subtle.export_jwk(key))
       let cache = [task, ..cache]
       do_run(resume(output), root, cache, servers)
     }
-    t.Fetch(request, resume) -> {
+    e.Fetch(request, resume) -> {
       use return <- promise.await(do_fetch(request))
       let cache = [task, ..cache]
       do_run(resume(return), root, cache, servers)
     }
-    t.Follow(uri, resume) -> {
+    e.Follow(uri, resume) -> {
       use return <- promise.await(do_follow(uri))
       let assert Ok(raw) = return
       let cache = [task, ..cache]
       do_run(resume(uri.parse(raw)), root, cache, servers)
     }
-    t.GenerateKeyPair(algorithm, exportable, usages, resume) -> {
+    e.GenerateKeyPair(algorithm, exportable, usages, resume) -> {
       let alg = case algorithm {
-        t.EcKeyGenParams(name, curve) -> subtle.EcKeyGenParams(name, curve)
+        e.EcKeyGenParams(name, curve) -> subtle.EcKeyGenParams(name, curve)
       }
       let usages = list.map(usages, usage_to_subtle)
       use result <- promise.await(subtle.generate_key(alg, exportable, usages))
       let result = case result {
-        Ok(#(public, private)) -> Ok(t.KeyPair(public:, private:))
+        Ok(#(public, private)) -> Ok(e.KeyPair(public:, private:))
         Error(reason) -> Error(reason)
       }
       let cache = [task, ..cache]
       do_run(resume(result), root, cache, servers)
     }
-    t.Hash(algorithm, bytes, resume) -> {
+    e.Hash(algorithm, bytes, resume) -> {
       use result <- promise.await(do_hash(algorithm, bytes))
       let cache = [task, ..cache]
       do_run(resume(result), root, cache, servers)
     }
-    t.List(directory, resume) -> {
+    e.List(directory, resume) -> {
       let path = filepath.join(root, directory)
       let entries = fs.read_directory(path)
       let entries = result.map_error(entries, snag.pretty_print)
       let cache = [task, ..cache]
       do_run(resume(entries), root, cache, servers)
     }
-    t.Log(message, resume) -> {
+    e.Log(message, resume) -> {
       io.println(message)
       let cache = [task, ..cache]
       do_run(resume(Ok(Nil)), root, cache, servers)
     }
-    t.Read(file, resume) -> {
+    e.Read(file, resume) -> {
       let cache = [task, ..cache]
       do_run(resume(do_read(file, root)), root, cache, servers)
     }
-    t.Serve(port, handle, resume) -> {
+    e.Serve(port, handle, resume) -> {
       let port = option.unwrap(port, 8080)
       let #(result, servers) = case do_serve(port, handle) {
         Ok(server) -> #(Ok(Nil), [#(port, server), ..servers])
@@ -230,36 +231,36 @@ fn do_run(task, root, cache, servers) {
       let cache = [task, ..cache]
       do_run(resume(result), root, cache, servers)
     }
-    t.Sign(algorithm, key, data, resume) -> {
+    e.Sign(algorithm, key, data, resume) -> {
       let algorithm = case algorithm {
-        t.EcdsaParams(x) -> subtle.EcdsaParams(hash_algorithm_to_subtle(x))
+        e.EcdsaParams(x) -> subtle.EcdsaParams(hash_algorithm_to_subtle(x))
       }
       use result <- promise.await(subtle.sign(algorithm, key, data))
       let cache = [task, ..cache]
       do_run(resume(result), root, cache, servers)
     }
-    t.StrongRandom(length, resume) -> {
+    e.StrongRandom(length, resume) -> {
       let bytes = crypto.strong_random_bytes(length)
       let cache = [task, ..cache]
       do_run(resume(Ok(bytes)), root, cache, servers)
     }
-    t.UnixNow(resume) -> {
+    e.UnixNow(resume) -> {
       let now = date.get_time(date.now()) / 1000
       let cache = [task, ..cache]
       do_run(resume(now), root, cache, servers)
     }
-    t.Visit(uri, resume) -> {
+    e.Visit(uri, resume) -> {
       browser.open(uri.to_string(uri))
       let cache = [task, ..cache]
       do_run(resume(Ok(Nil)), root, cache, servers)
     }
-    t.Write(file, bytes, resume) -> {
+    e.Write(file, bytes, resume) -> {
       let path = filepath.join(root, file)
       let result = fs.write(path, bytes) |> result.map_error(snag.line_print)
       let cache = [task, ..cache]
       do_run(resume(result), root, cache, servers)
     }
-    t.Zip(files, resume) -> {
+    e.Zip(files, resume) -> {
       use return <- promise.await(zip.zip(files))
       let cache = [task, ..cache]
       do_run(resume(Ok(return)), root, cache, servers)
@@ -298,13 +299,14 @@ pub fn do_fetch(request) {
 
 fn cast_fetch_error(reason) {
   case reason {
-    fetch.NetworkError(s) -> t.NetworkError(s)
-    fetch.UnableToReadBody -> t.UnableToReadBody
-    fetch.InvalidJsonBody -> t.UnableToReadBody
+    fetch.NetworkError(s) -> e.NetworkError(s)
+    fetch.UnableToReadBody -> e.UnableToReadBody
+    fetch.InvalidJsonBody -> e.UnableToReadBody
   }
 }
 
 fn do_follow(url) {
+  let url = uri.to_string(url)
   browser.open(url)
   receive_redirect()
 }
@@ -358,23 +360,23 @@ fn do_hash(algorithm, bytes) {
 
 fn hash_algorithm_to_subtle(algorithm) {
   case algorithm {
-    t.SHA1 -> subtle.SHA1
-    t.SHA256 -> subtle.SHA256
-    t.SHA384 -> subtle.SHA384
-    t.SHA512 -> subtle.SHA512
+    e.Sha1 -> subtle.SHA1
+    e.Sha256 -> subtle.SHA256
+    e.Sha384 -> subtle.SHA384
+    e.Sha512 -> subtle.SHA512
   }
 }
 
 fn usage_to_subtle(usage) {
   case usage {
-    t.CanEncrypt -> subtle.Encrypt
-    t.CanDecrypt -> subtle.Decrypt
-    t.CanSign -> subtle.Sign
-    t.CanVerify -> subtle.Verify
-    t.CanDeriveKey -> subtle.DeriveKey
-    t.CanDeriveBits -> subtle.DeriveBits
-    t.CanWrapKey -> subtle.WrapKey
-    t.CanUnwrapKey -> subtle.UnwrapKey
+    e.CanEncrypt -> subtle.Encrypt
+    e.CanDecrypt -> subtle.Decrypt
+    e.CanSign -> subtle.Sign
+    e.CanVerify -> subtle.Verify
+    e.CanDeriveKey -> subtle.DeriveKey
+    e.CanDeriveBits -> subtle.DeriveBits
+    e.CanWrapKey -> subtle.WrapKey
+    e.CanUnwrapKey -> subtle.UnwrapKey
   }
 }
 
